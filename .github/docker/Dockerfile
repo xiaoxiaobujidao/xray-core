@@ -46,7 +46,10 @@ RUN mkdir -p /tmp/var/log/xray && touch \
   /tmp/var/log/xray/error.log
 
 # Build finally image
-FROM gcr.io/distroless/static:nonroot
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates tzdata && \
+    adduser -D -H -u 65532 -s /sbin/nologin nonroot
 
 COPY --from=build --chown=0:0 --chmod=755 /src/xray /usr/local/bin/xray
 COPY --from=build --chown=65532:65532 --chmod=755 /tmp/empty /usr/local/share/xray
@@ -61,6 +64,8 @@ VOLUME /var/log/xray
 
 ARG TZ=Etc/UTC
 ENV TZ=$TZ
+
+USER nonroot
 
 ENTRYPOINT [ "/usr/local/bin/xray" ]
 CMD [ "-confdir", "/usr/local/etc/xray/" ]
